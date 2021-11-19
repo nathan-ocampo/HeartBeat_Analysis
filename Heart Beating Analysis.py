@@ -12,10 +12,10 @@ import numpy as np
 import os
 import pandas as pd
 
-timepoints = 4 #input('How many timepoints: ')
+timepoints = 3 #input('How many timepoints: ')
 tps = []
 treatment = 'trtd' #string.empty
-con = "blebb" #input('Enter Conditon: ',"s")
+con = "media" #input('Enter Conditon: ')
 
 # if(input('Treatment or Control (t/c):')== 't'):
 #      treatment = 'trtd'
@@ -24,19 +24,23 @@ con = "blebb" #input('Enter Conditon: ',"s")
 
 
 
-hrt = 3#input('Enter Sample #: ')
+hrt = input('Enter Sample #: ')
 
 if(timepoints == 4):
-    tps = [0, 15, 60, 180]
+    tps = [0, 15, 30, 45]
 
 elif(timepoints == 3):
-    tps = [0, 57600, 144000]
+    tps = [0, 420, 1440]
 
 else:
     tps = [0, 45, 90, 180, 270]
 
 #Set working directory
-os.chdir( r'C:\Users\natha\Desktop\CEMB Summer Program 2021\Discher Lab\Ex-vivo chick heart experiments\Experiments\Beating data_20210728\Data analysis\{c}\{t}{h}'.format(c = con, h = hrt, t = treatment))
+#if gell run first
+if 'y' == 'y':
+    os.chdir( r'C:\Users\natha\Desktop\CEMB Summer Program 2021\Discher Lab\Ex-vivo chick heart experiments\Experiments\Beating data_20210728\Data analysis\gels\{c}\{t}{h}'.format(c = con, h = hrt, t = treatment))
+else:
+    os.chdir( r'C:\Users\natha\Desktop\CEMB Summer Program 2021\Discher Lab\Ex-vivo chick heart experiments\Experiments\Beating data_20210728\Data analysis\{c}\{t}{h}'.format(c = con, h = hrt, t = treatment))
 
 
 
@@ -260,52 +264,72 @@ workbook = writer.book
 
 ##########################################################################
 Analysis_Summary.to_excel(excel_writer = writer, sheet_name = 'Summary' , index = True)
-frequency_distribution.to_excel(excel_writer = writer, sheet_name = 'Freq_Distribtuion' , index = True)
+frequency_distribution.to_excel(excel_writer = writer, sheet_name = 'Freq_Distribution' , index = True)
 
 summary =writer.sheets['Summary']
-freqDisSheet = writer.sheets['Freq_Distribtuion']
+freqDisSheet = writer.sheets['Freq_Distribution']
 
-#create chart object for Frequncy distribution
+#create chart object for strain over time
+strainOt = workbook.add_chart({'type': 'scatter','subtype': 'straight_with_markers'})
+strainOt.add_series({
+    'name':       'Average over time',
+    'categories': ['Summary', 1, 1, len(tps)+1, 1],
+    'values':     ['Summary', 1, 2, len(tps)+1, 2],
+})
+
+
+
+
+#create chart object for Frequency distribution
 freqDis = workbook.add_chart({'type': 'scatter','subtype': 'straight'})
 
 #Add frequency distribution for tp0
 freqDis.add_series({
     'name':       'tp0',
-    'categories': ['Freq_Distribtuion', 1, 1, 1, len(f)+1],
-    'values':     ['Freq_Distribtuion', 2, 1, 2, len(P1_tp0)+1],
+    'categories': ['Freq_Distribution', 1, 1, 1, len(f)+1],
+    'values':     ['Freq_Distribution', 2, 1, 2, len(P1_tp0)+1],
 })
 
 #Add frequency distribution for tp1
 freqDis.add_series({
     'name':       'tp1',
-    'categories': ['Freq_Distribtuion', 1, 1, 1, len(f)+1],
-    'values':     ['Freq_Distribtuion', 3, 1, 3, len(P1_tp1)+1],
+    'categories': ['Freq_Distribution', 1, 1, 1, len(f)+1],
+    'values':     ['Freq_Distribution', 3, 1, 3, len(P1_tp1)+1],
 })
 
 #Add frequency distribution for tp2
 freqDis.add_series({
     'name':       'tp2',
-    'categories': ['Freq_Distribtuion', 1, 1, 1, len(f)+1],
-    'values':     ['Freq_Distribtuion', 4, 1, 4, len(P1_tp2)+1],
+    'categories': ['Freq_Distribution', 1, 1, 1, len(f)+1],
+    'values':     ['Freq_Distribution', 4, 1, 4, len(P1_tp2)+1],
 })
 
+if len(tps) ==4:
 #Add frequency distribution for tp3
-freqDis.add_series({
-    'name':       'tp3',
-    'categories': ['Freq_Distribtuion', 1, 1, 1, len(f)+1],
-    'values':     ['Freq_Distribtuion', 5, 1, 5, len(P1_tp3)+1],
+    freqDis.add_series({
+        'name':       'tp3',
+        'categories': ['Freq_Distribution', 1, 1, 1, len(f)+1],
+        'values':     ['Freq_Distribution', 5, 1, 5, len(P1_tp3)+1],
+    })
+
+
+# Set name on axis of colChartBkwd_Fwd object and insert to 920vs860nm sheet
+freqDis.set_title({'name': 'Frequency Distribution of {c} {t}{h}'.format(c = con, h = hrt, t =treatment)})
+freqDis.set_x_axis({'name': 'Frequency (Hz)', 'min': 0, 'max': 5})
+freqDis.set_y_axis({'name': 'Magnitude','min': 0, 'max': 2,
+                  'major_gridlines': {'visible': True},
 })
 
 # Set name on axis of colChartBkwd_Fwd object and insert to 920vs860nm sheet
-freqDis.set_title({'name': 'Frequnecy Distribution of {c} {t}{h}'.format(c = con, h = hrt, t =treatment)})
-freqDis.set_x_axis({'name': 'Frequncy Hz', 'min': 0, 'max': 5})
-freqDis.set_y_axis({'name': 'Magnitude','min': 0, 'max': .4,
+strainOt.set_title({'name': 'Strain over time {c} {t}{h}'.format(c = con, h = hrt, t =treatment)})
+strainOt.set_x_axis({'name': 'Time (min)', 'min': 0, 'max': tps[-1]+600})
+strainOt.set_y_axis({'name': 'Magnitude','min': 0, 'max': 5,
                   'major_gridlines': {'visible': True},
 })
 
 #Insert chartsheet
 freqDisSheet.insert_chart('G8', freqDis)
-
+summary.insert_chart('F1',strainOt)
 
 #close excel file       
 writer.close()
